@@ -35,18 +35,6 @@ contract BabiesOfMars is ERC20Upgradeable {
     uint256 public constant MAX_UINT256 = ~uint256(0);
     uint8 public constant RATE_DECIMALS = 7;
 
-    uint256 public liquidityFee = 300;
-    uint256 public gameTreasuryFee = 300;
-    uint256 public redTrustFee = 300;
-    uint256 public redFurnaceFee = 800;
-    uint256 public nftRewardFee = 300;
-    uint256 public totalFee =
-        liquidityFee
-            .add(gameTreasuryFee)
-            .add(redTrustFee)
-            .add(redFurnaceFee)
-            .add(nftRewardFee);
-    uint256 public sellFee = 200;
     uint256 public feeDenominator = 10000;
 
     address DEAD = 0x000000000000000000000000000000000000dEaD;
@@ -65,6 +53,7 @@ contract BabiesOfMars is ERC20Upgradeable {
 
     uint256 lastPrice;
     uint256 defenderTimer;
+    uint256 accumulatedImpact;
     bool rdStatus;
 
     modifier swapping() {
@@ -247,51 +236,90 @@ contract BabiesOfMars is ERC20Upgradeable {
         address recipient,
         uint256 gonAmount
     ) internal returns (uint256) {
-        uint256 _totalFee = totalFee;
-        uint256 _gameTreasuryFee = gameTreasuryFee;
         (uint256 impact, uint256 oldPrice, uint256 newPrice) = getImpact(
             gonAmount
         );
-        uint256 impactTax = ((gonAmount * impact) / 1000) * 4;
 
+        // deactivate defender if 1 hour window has passed
         if (rdStatus == true) {
-            if (block.timestamp - defenderTimer > 0) {
-                // while (block.timestamp - defenderTimer > 1 hours) {
-                //     defenderTimer += 1 hours;
-                // }
+            if (block.timestamp - defenderTimer > 1 hours) {
                 rdStatus = false;
-            } else {
-                runDefender(gonAmount, impactTax, sender, recipient);
+                defenderTimer = block.timestamp.sub(1);
+                accumulatedImpact = 1;
             }
         }
 
+        uint256 liquidityFee; uint256 rtfFee; uint256 rtFee; uint256 rfFee; uint256 rewardFee; uint256 impactTax;
+
+        // sell
         if (recipient == address(pair)) {
-            if (impact > 100) {
-                runDefender(gonAmount, impactTax, sender, recipient);
+            if (block.timestamp - defenderTimer < 1 hours) {
+                // add impact to accumulator
+                accumulatedImpact = accumulatedImpact.add(impact);
+            } else {
+                // window has passed, reset accumulator
+                accumulatedImpact = impact;
+                defenderTimer = block.timestamp;
             }
-            _totalFee = totalFee.add(sellFee).add(impactTax);
-            _gameTreasuryFee = gameTreasuryFee.add(sellFee).add(impactTax);
+
+            require(accumulatedImpact <= 500, "price impact is too large");
+
+            // activate defender if accumulated impact is > 1%
+            if (accumulatedImpact > 100) {
+                rdStatus = true;
+                defenderTimer = block.timestamp;
+            } else {
+                impactTax = ((gonAmount * impact) / 1000) * 4;
+            }
+
+            if (rdStatus) {
+                liquidityFee = 500;
+                rtfFee = 1000;
+                rtFee = 100 + 4 * impact;
+            } else {
+                liquidityFee = 400;
+                rtfFee = 500;
+                rtFee = 500 + 4 * impact;
+                rfFee = 200;
+                rewardFee = 300;
+            }
+        } else {  // buy
+            if (rdStatus) {
+                liquidityFee = 200;
+                rtfFee = 500;
+                rtFee = 300;
+            } else {
+                liquidityFee = 400;
+                rtfFee = 500;
+                rtFee = 300;
+                rfFee = 200;
+                rewardFee = 300;
+            }
         }
 
-        uint256 feeAmount = gonAmount.div(feeDenominator).mul(_totalFee);
+        uint256 _totalFee = liquidityFee.add(rtfFee).add(rtFee).add(rfFee).add(rewardFee);
+        uint256 feeAmount = gonAmount.mul(_totalFee).div(feeDenominator);
 
         _gonBalances[redFurnace] = _gonBalances[redFurnace].add(
-            gonAmount.div(feeDenominator).mul(redFurnaceFee)
+            gonAmount.mul(rfFee).div(feeDenominator)
         );
         _gonBalances[address(treasury)] = _gonBalances[address(treasury)].add(
-            gonAmount.div(feeDenominator).mul(_gameTreasuryFee)
+            gonAmount.mul(rtFee).div(feeDenominator)
         );
         _gonBalances[redTrustWallet] = _gonBalances[redTrustWallet].add(
-            gonAmount.div(feeDenominator).mul(redTrustFee)
+            gonAmount.mul(rtfFee).div(feeDenominator)
         );
         _gonBalances[autoLiquidityReceiver] = _gonBalances[
             autoLiquidityReceiver
-        ].add(gonAmount.div(feeDenominator).mul(liquidityFee));
-        approve(address(nftRewardPool), nftRewardFee);
-        nftRewardPool.raiseRewardPool(nftRewardFee);
-        emit Transfer(sender, address(treasury), _gameTreasuryFee.div(_gonsPerFragment));
-        emit Transfer(sender, redTrustWallet, redTrustFee.div(_gonsPerFragment));
-        emit Transfer(sender, redFurnace, redFurnaceFee.div(_gonsPerFragment));
+        ].add(gonAmount.mul(liquidityFee).div(feeDenominator));
+        approve(address(nftRewardPool), rewardFee);
+        nftRewardPool.raiseRewardPool(rewardFee);
+
+        emit Transfer(sender, address(treasury), rtFee.div(_gonsPerFragment));
+        emit Transfer(sender, redTrustWallet, rtfFee.div(_gonsPerFragment));
+        emit Transfer(sender, redFurnace, rfFee.div(_gonsPerFragment));
+        emit Transfer(sender, autoLiquidityReceiver, liquidityFee.div(_gonsPerFragment));
+
         return gonAmount.sub(feeAmount);
     }
 
@@ -313,56 +341,6 @@ contract BabiesOfMars is ERC20Upgradeable {
         uint256 new0Price = amount / amountTradedFor;
         return (((new0Price - price0) / price0) * 10000, price0, new0Price);
         // return (amount*priceImpact/1000)*4;
-    }
-
-    function runDefender(
-        uint256 amount,
-        uint256 impact,
-        address sender,
-        address recipient
-    ) internal {
-        rdStatus = true;
-        uint256 _liquidityFee = 200;
-        uint256 _redTrustFee = 500;
-        uint256 _treasuryFee = 300;
-        if (recipient == address(pair)) {
-            uint256 hourlyImpact;
-            require(
-                impact <= 500,
-                "selling with price impact of more than 5% is forbidden"
-            );
-            if (impact >= 100) {
-                if(block.timestamp - defenderTimer > 0) {
-                    defenderTimer = block.timestamp;
-                }
-                defenderTimer += 1 hours;
-            }
-            uint256 impactTax = ((amount * impact) / 1000) * 4;
-            _treasuryFee.add(impactTax).add(700);
-            _liquidityFee.add(300);
-            _redTrustFee.add(500);
-        }
-        // uint256 _totalFee = _liquidityFee.add(_redTrustFee).add(_treasuryFee);
-        // uint256 feeAmount = amount.div(feeDenominator).mul(_totalFee);
-
-        _gonBalances[address(treasury)] = _gonBalances[address(treasury)].add(
-            amount.div(feeDenominator).mul(_treasuryFee)
-        );
-        _gonBalances[redTrustWallet] = _gonBalances[redTrustWallet].add(
-            amount.div(feeDenominator).mul(_redTrustFee)
-        );
-        _gonBalances[autoLiquidityReceiver] = _gonBalances[
-            autoLiquidityReceiver
-        ].add(amount.div(feeDenominator).mul(liquidityFee));
-
-        emit Transfer(sender, address(treasury), _treasuryFee.div(_gonsPerFragment));
-        emit Transfer(sender, redTrustWallet, _redTrustFee.div(_gonsPerFragment));
-        // emit Transfer(
-        //     sender,
-        //     nftRewardPool,
-        //     nftRewardFee.div(_gonsPerFragment)
-        // );
-        return;
     }
 
     function addLiquidity() internal swapping {
@@ -601,28 +579,6 @@ contract BabiesOfMars is ERC20Upgradeable {
         treasury = _treasury;
         redTrustWallet = _redTrustWallet;
         redFurnace = _redFurnace;
-    }
-
-    function setFee(
-        uint256 _liquidityFee,
-        uint256 _gameTreasuryFee,
-        uint256 _redTrustFee,
-        uint256 _redFurnaceFee,
-        uint256 _sellFee,
-        uint256 _nftRewardFee
-    ) public onlyAdmin {
-        liquidityFee = _liquidityFee;
-        gameTreasuryFee = _gameTreasuryFee;
-        redTrustFee = _redTrustFee;
-        redFurnaceFee = _redFurnaceFee;
-        nftRewardFee = _nftRewardFee;
-        totalFee = liquidityFee
-            .add(gameTreasuryFee)
-            .add(redTrustFee)
-            .add(redFurnaceFee)
-            .add(nftRewardFee);
-        sellFee = _sellFee;
-        require(totalFee.add(sellFee) <= 250, "Fee too high!");
     }
 
     function getLiquidityBacking(uint256 accuracy)
