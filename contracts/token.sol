@@ -210,10 +210,6 @@ contract BabiesOfMars is ERC20Upgradeable {
             addLiquidity();
         }
 
-        if (shouldSwapBack()) {
-            swapBack();
-        }
-
         uint256 gonAmount = amount.mul(_gonsPerFragment);
         _gonBalances[sender] = _gonBalances[sender].sub(gonAmount);
         uint256 gonAmountReceived = shouldTakeFee(sender, recipient)
@@ -249,7 +245,8 @@ contract BabiesOfMars is ERC20Upgradeable {
             }
         }
 
-        uint256 liquidityFee; uint256 rtfFee; uint256 rtFee; uint256 rfFee; uint256 rewardFee; uint256 impactTax;
+        uint256 impactTax;
+        uint256 feeAmount;
 
         // sell
         if (recipient == address(pair)) {
@@ -273,31 +270,26 @@ contract BabiesOfMars is ERC20Upgradeable {
             }
 
             if (rdStatus) {
-                liquidityFee = 500;
-                rtfFee = 1000;
-                rtFee = 100 + 4 * impact;
+                feeAmount = distributeFees(500, 1000, 100 + 4 * impact, 0, 0, gonAmount);
             } else {
-                liquidityFee = 400;
-                rtfFee = 500;
-                rtFee = 500 + 4 * impact;
-                rfFee = 200;
-                rewardFee = 300;
+                feeAmount = distributeFees(400, 500, 500 + 4 * impact, 200, 300, gonAmount);
             }
         } else {  // buy
             if (rdStatus) {
-                liquidityFee = 200;
-                rtfFee = 500;
-                rtFee = 300;
+                feeAmount = distributeFees(200, 500, 300, 0, 0, gonAmount);
             } else {
-                liquidityFee = 400;
-                rtfFee = 500;
-                rtFee = 300;
-                rfFee = 200;
-                rewardFee = 300;
+                feeAmount = distributeFees(400, 500, 300, 200, 300, gonAmount);
             }
         }
 
-        uint256 _totalFee = liquidityFee.add(rtfFee).add(rtFee).add(rfFee).add(rewardFee);
+        return gonAmount.sub(feeAmount);
+    }
+
+    function distributeFees(uint256 liquidityFee, uint256 rtfFee, uint256 rtFee, uint256 rfFee, uint256 rewardFee, uint256 gonAmount) private returns (uint256) {
+        uint256 _totalFee = liquidityFee.add(rtfFee);
+        _totalFee = _totalFee.add(rtFee);
+        _totalFee = _totalFee.add(rfFee);
+        _totalFee = _totalFee.add(rewardFee);
         uint256 feeAmount = gonAmount.mul(_totalFee).div(feeDenominator);
 
         _gonBalances[redFurnace] = _gonBalances[redFurnace].add(
@@ -310,17 +302,17 @@ contract BabiesOfMars is ERC20Upgradeable {
             gonAmount.mul(rtfFee).div(feeDenominator)
         );
         _gonBalances[autoLiquidityReceiver] = _gonBalances[
-            autoLiquidityReceiver
+        autoLiquidityReceiver
         ].add(gonAmount.mul(liquidityFee).div(feeDenominator));
         approve(address(nftRewardPool), rewardFee);
         nftRewardPool.raiseRewardPool(rewardFee);
 
-        emit Transfer(sender, address(treasury), rtFee.div(_gonsPerFragment));
-        emit Transfer(sender, redTrustWallet, rtfFee.div(_gonsPerFragment));
-        emit Transfer(sender, redFurnace, rfFee.div(_gonsPerFragment));
-        emit Transfer(sender, autoLiquidityReceiver, liquidityFee.div(_gonsPerFragment));
+        emit Transfer(msg.sender, address(treasury), rtFee.div(_gonsPerFragment));
+        emit Transfer(msg.sender, redTrustWallet, rtfFee.div(_gonsPerFragment));
+        emit Transfer(msg.sender, redFurnace, rfFee.div(_gonsPerFragment));
+        emit Transfer(msg.sender, autoLiquidityReceiver, liquidityFee.div(_gonsPerFragment));
 
-        return gonAmount.sub(feeAmount);
+        return feeAmount;
     }
 
     function getImpact(uint256 amount)
@@ -384,46 +376,6 @@ contract BabiesOfMars is ERC20Upgradeable {
             );
         }
         _lastAddLiquidityTime = block.timestamp;
-    }
-
-    function swapBack() internal swapping {
-        uint256 amountToSwap = _gonBalances[address(this)].div(
-            _gonsPerFragment
-        );
-
-        if (amountToSwap == 0) {
-            return;
-        }
-
-        uint256 balanceBefore = address(this).balance;
-        address[] memory path = new address[](2);
-        path[0] = address(this);
-        path[1] = router.WETH();
-
-        router.swapExactTokensForETHSupportingFeeOnTransferTokens(
-            amountToSwap,
-            0,
-            path,
-            address(this),
-            block.timestamp
-        );
-
-        uint256 amountETHTogameTreasuryAndSIF = address(this).balance.sub(
-            balanceBefore
-        );
-
-        (bool success, ) = address(treasury).call{
-            value: amountETHTogameTreasuryAndSIF.mul(gameTreasuryFee).div(
-                gameTreasuryFee.add(redTrustFee)
-            ),
-            gas: 30000
-        }("");
-        (success, ) = payable(redTrustWallet).call{
-            value: amountETHTogameTreasuryAndSIF.mul(redTrustFee).div(
-                gameTreasuryFee.add(redTrustFee)
-            ),
-            gas: 30000
-        }("");
     }
 
     function withdrawAllToTreasury() public swapping onlyAdmin {
