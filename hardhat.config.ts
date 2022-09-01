@@ -52,7 +52,12 @@ if(PRIVATE_KEY) {
             url: "https://data-seed-prebsc-1-s1.binance.org:8545",
             chainId: 97,
             gasPrice: 10000000000,
-            accounts
+            accounts,
+            verify: {
+                etherscan: {
+                    apiKey: BSCSCAN_TOKEN,
+                }
+            }
         },
         rinkeby: {
             url: "https://eth-rinkeby.alchemyapi.io/v2/v92DVe9FFvr2lzRB4wjtk-z4DdsQjBhs",
@@ -92,6 +97,18 @@ module.exports = {
             kovan:ETHERSCAN_TOKEN,
             bscTestnet:BSCSCAN_TOKEN,
             goerli:ETHERSCAN_TOKEN
+        }
+    },
+    verify: {
+        etherscan: {
+            apiKey: {
+                mainnet:ETHERSCAN_TOKEN,
+                rinkeby:ETHERSCAN_TOKEN,
+                ropsten:ETHERSCAN_TOKEN,
+                kovan:ETHERSCAN_TOKEN,
+                bscTestnet:BSCSCAN_TOKEN,
+                goerli:ETHERSCAN_TOKEN
+            }
         }
     },
     dependencyCompiler: {
