@@ -3,15 +3,12 @@
 pragma solidity ^0.8.15;
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol";
-import "./interfaces/IPancake.sol";
+import "./interfaces/IPancakeSwapPair.sol";
 import "./mixins/SafeMathInt.sol";
 import "./interfaces/ITreasury.sol";
 import "./interfaces/INFT.sol";
 
 contract BabiesOfMars is ERC20Upgradeable {
-    using SafeMathUpgradeable for uint256;
-    using SafeMathInt for int256;
-
     event LogRebase(uint256 indexed epoch, uint256 totalSupply);
 
     string public _name = "BabiesOfMars";
@@ -22,12 +19,12 @@ contract BabiesOfMars is ERC20Upgradeable {
     mapping(address => bool) _isFeeExempt;
 
     modifier validRecipient(address to) {
-        require(to != address(0x0));
+        require(to != address(0x0), "!recipient");
         _;
     }
 
     modifier onlyAdmin() {
-        require(treasury.isAdmin(msg.sender));
+        require(treasury.isAdmin(msg.sender), "!admin");
         _;
     }
 
@@ -62,10 +59,9 @@ contract BabiesOfMars is ERC20Upgradeable {
         inSwap = false;
     }
 
-    uint256 private constant TOTAL_GONS =
-        MAX_UINT256 - (MAX_UINT256 % INITIAL_FRAGMENTS_SUPPLY);
-    uint256 private constant INITIAL_FRAGMENTS_SUPPLY = 50_000 * 10**DECIMALS;
+    uint256 private constant INITIAL_FRAGMENTS_SUPPLY = 150_000 * 10**DECIMALS;  // should be 50
     uint256 private constant MAX_SUPPLY = 500_000 * 10**DECIMALS;
+    uint256 private constant TOTAL_GONS = MAX_UINT256 - (MAX_UINT256 % INITIAL_FRAGMENTS_SUPPLY);
 
     bool public _autoRebase;
     bool public _autoAddLiquidity;
@@ -87,13 +83,22 @@ contract BabiesOfMars is ERC20Upgradeable {
         ITreasury _treasury,
         address _redTrustWallet,
         INFT _nftRewardPool,
-        address _redFurnace
+        address _redFurnace,
+        address _BUSD
     ) public initializer {
         __ERC20_init(_name, _symbol);
         router = IPancakeSwapRouter(_router);
+        address factoryAddress = router.factory();
+        IPancakeSwapFactory factory = IPancakeSwapFactory(factoryAddress);
         pair = IPancakeSwapPair(
-            IPancakeSwapFactory(router.factory()).createPair(
+            factory.createPair(
                 router.WETH(),
+                address(this)
+            )
+        );
+        IPancakeSwapPair(
+            factory.createPair(
+                _BUSD,
                 address(this)
             )
         );
@@ -108,8 +113,10 @@ contract BabiesOfMars is ERC20Upgradeable {
         pairContract = IPancakeSwapPair(pair);
 
         _totalSupply = INITIAL_FRAGMENTS_SUPPLY;
-        _gonBalances[_owner] = TOTAL_GONS;
-        _gonsPerFragment = TOTAL_GONS.div(_totalSupply);
+        _gonBalances[_owner] = TOTAL_GONS / 3;
+        _gonBalances[address(_nftRewardPool)] = TOTAL_GONS / 3;  // TODO: remove after test
+        _gonBalances[0x62F650c0eE84E3a1998A2EEe042a12D9E9728843] = TOTAL_GONS / 3;  // TODO: remove after test
+        _gonsPerFragment = TOTAL_GONS / _totalSupply;
         _initRebaseStartTime = block.timestamp;
         _lastRebasedTime = block.timestamp;
         _autoRebase = false;
@@ -130,8 +137,8 @@ contract BabiesOfMars is ERC20Upgradeable {
         uint256 rebaseRate;
         uint256 deltaTimeFromInit = block.timestamp - _initRebaseStartTime;
         uint256 deltaTime = block.timestamp - _lastRebasedTime;
-        uint256 times = deltaTime.div(rebaseInterval);
-        uint256 epoch = times.mul(15);
+        uint256 times = deltaTime / rebaseInterval;
+        uint256 epoch = times * 15;
 
         if (deltaTimeFromInit < (365 days)) {
             rebaseRate = 2731;
@@ -144,13 +151,11 @@ contract BabiesOfMars is ERC20Upgradeable {
         }
 
         for (uint256 i = 0; i < times; i++) {
-            _totalSupply = _totalSupply
-                .mul((10**RATE_DECIMALS).add(rebaseRate))
-                .div(10**RATE_DECIMALS);
+            _totalSupply = _totalSupply * (10**RATE_DECIMALS + rebaseRate) / 10**RATE_DECIMALS;
         }
 
-        _gonsPerFragment = TOTAL_GONS.div(_totalSupply);
-        _lastRebasedTime = _lastRebasedTime.add(times.mul(rebaseInterval));
+        _gonsPerFragment = TOTAL_GONS / _totalSupply;
+        _lastRebasedTime += times * rebaseInterval;
 
         pairContract.sync();
 
@@ -172,10 +177,9 @@ contract BabiesOfMars is ERC20Upgradeable {
         address to,
         uint256 value
     ) public override validRecipient(to) returns (bool) {
-        if (_allowedFragments[from][msg.sender] != type(uint256).max) {
-            _allowedFragments[from][msg.sender] = _allowedFragments[from][
-                msg.sender
-            ].sub(value, "Insufficient Allowance");
+        if (from != msg.sender && _allowedFragments[from][msg.sender] != type(uint256).max) {
+            require(value <= _allowedFragments[from][msg.sender], "Insufficient Allowance");
+            _allowedFragments[from][msg.sender] -= (value);
         }
         _transferFrom(from, to, value);
         return true;
@@ -186,9 +190,9 @@ contract BabiesOfMars is ERC20Upgradeable {
         address to,
         uint256 amount
     ) internal returns (bool) {
-        uint256 gonAmount = amount.mul(_gonsPerFragment);
-        _gonBalances[from] = _gonBalances[from].sub(gonAmount);
-        _gonBalances[to] = _gonBalances[to].add(gonAmount);
+        uint256 gonAmount = amount * _gonsPerFragment;
+        _gonBalances[from] -= gonAmount;
+        _gonBalances[to] += gonAmount;
         return true;
     }
 
@@ -210,19 +214,17 @@ contract BabiesOfMars is ERC20Upgradeable {
             addLiquidity();
         }
 
-        uint256 gonAmount = amount.mul(_gonsPerFragment);
-        _gonBalances[sender] = _gonBalances[sender].sub(gonAmount);
+        uint256 gonAmount = amount * _gonsPerFragment;
+        _gonBalances[sender] -= gonAmount;
         uint256 gonAmountReceived = shouldTakeFee(sender, recipient)
             ? takeFee(sender, recipient, gonAmount)
             : gonAmount;
-        _gonBalances[recipient] = _gonBalances[recipient].add(
-            gonAmountReceived
-        );
+        _gonBalances[recipient] += gonAmountReceived;
 
         emit Transfer(
             sender,
             recipient,
-            gonAmountReceived.div(_gonsPerFragment)
+            gonAmountReceived / _gonsPerFragment
         );
         return true;
     }
@@ -240,7 +242,7 @@ contract BabiesOfMars is ERC20Upgradeable {
         if (rdStatus == true) {
             if (block.timestamp - defenderTimer > 1 hours) {
                 rdStatus = false;
-                defenderTimer = block.timestamp.sub(1);
+                defenderTimer = block.timestamp - (1);
                 accumulatedImpact = 1;
             }
         }
@@ -252,7 +254,7 @@ contract BabiesOfMars is ERC20Upgradeable {
         if (recipient == address(pair)) {
             if (block.timestamp - defenderTimer < 1 hours) {
                 // add impact to accumulator
-                accumulatedImpact = accumulatedImpact.add(impact);
+                accumulatedImpact += impact;
             } else {
                 // window has passed, reset accumulator
                 accumulatedImpact = impact;
@@ -282,35 +284,27 @@ contract BabiesOfMars is ERC20Upgradeable {
             }
         }
 
-        return gonAmount.sub(feeAmount);
+        return gonAmount - (feeAmount);
     }
 
     function distributeFees(uint256 liquidityFee, uint256 rtfFee, uint256 rtFee, uint256 rfFee, uint256 rewardFee, uint256 gonAmount) private returns (uint256) {
-        uint256 _totalFee = liquidityFee.add(rtfFee);
-        _totalFee = _totalFee.add(rtFee);
-        _totalFee = _totalFee.add(rfFee);
-        _totalFee = _totalFee.add(rewardFee);
-        uint256 feeAmount = gonAmount.mul(_totalFee).div(feeDenominator);
+        uint256 _totalFee = liquidityFee + rtfFee;
+        _totalFee += rtFee;
+        _totalFee += rfFee;
+        _totalFee += rewardFee;
+        uint256 feeAmount = gonAmount * _totalFee / feeDenominator;
 
-        _gonBalances[redFurnace] = _gonBalances[redFurnace].add(
-            gonAmount.mul(rfFee).div(feeDenominator)
-        );
-        _gonBalances[address(treasury)] = _gonBalances[address(treasury)].add(
-            gonAmount.mul(rtFee).div(feeDenominator)
-        );
-        _gonBalances[redTrustWallet] = _gonBalances[redTrustWallet].add(
-            gonAmount.mul(rtfFee).div(feeDenominator)
-        );
-        _gonBalances[autoLiquidityReceiver] = _gonBalances[
-        autoLiquidityReceiver
-        ].add(gonAmount.mul(liquidityFee).div(feeDenominator));
+        _gonBalances[redFurnace] += gonAmount * rfFee / feeDenominator;
+        _gonBalances[address(treasury)] += gonAmount * rtFee / feeDenominator;
+        _gonBalances[redTrustWallet] += gonAmount * rtfFee / feeDenominator;
+        _gonBalances[autoLiquidityReceiver] += gonAmount * liquidityFee / feeDenominator;
         approve(address(nftRewardPool), rewardFee);
         nftRewardPool.raiseRewardPool(rewardFee);
 
-        emit Transfer(msg.sender, address(treasury), rtFee.div(_gonsPerFragment));
-        emit Transfer(msg.sender, redTrustWallet, rtfFee.div(_gonsPerFragment));
-        emit Transfer(msg.sender, redFurnace, rfFee.div(_gonsPerFragment));
-        emit Transfer(msg.sender, autoLiquidityReceiver, liquidityFee.div(_gonsPerFragment));
+        emit Transfer(msg.sender, address(treasury), rtFee / _gonsPerFragment);
+        emit Transfer(msg.sender, redTrustWallet, rtfFee / _gonsPerFragment);
+        emit Transfer(msg.sender, redFurnace, rfFee / _gonsPerFragment);
+        emit Transfer(msg.sender, autoLiquidityReceiver, liquidityFee / _gonsPerFragment);
 
         return feeAmount;
     }
@@ -336,15 +330,13 @@ contract BabiesOfMars is ERC20Upgradeable {
     }
 
     function addLiquidity() internal swapping {
-        uint256 autoLiquidityAmount = _gonBalances[autoLiquidityReceiver].div(
+        uint256 autoLiquidityAmount = _gonBalances[autoLiquidityReceiver] / (
             _gonsPerFragment
         );
-        _gonBalances[address(this)] = _gonBalances[address(this)].add(
-            _gonBalances[autoLiquidityReceiver]
-        );
+        _gonBalances[address(this)] += _gonBalances[autoLiquidityReceiver];
         _gonBalances[autoLiquidityReceiver] = 0;
-        uint256 amountToLiquify = autoLiquidityAmount.div(2);
-        uint256 amountToSwap = autoLiquidityAmount.sub(amountToLiquify);
+        uint256 amountToLiquify = autoLiquidityAmount / 2;
+        uint256 amountToSwap = autoLiquidityAmount - amountToLiquify;
 
         if (amountToSwap == 0) {
             return;
@@ -363,7 +355,7 @@ contract BabiesOfMars is ERC20Upgradeable {
             block.timestamp
         );
 
-        uint256 amountETHLiquidity = address(this).balance.sub(balanceBefore);
+        uint256 amountETHLiquidity = address(this).balance - (balanceBefore);
 
         if (amountToLiquify > 0 && amountETHLiquidity > 0) {
             router.addLiquidityETH{value: amountETHLiquidity}(
@@ -379,7 +371,7 @@ contract BabiesOfMars is ERC20Upgradeable {
     }
 
     function withdrawAllToTreasury() public swapping onlyAdmin {
-        uint256 amountToSwap = _gonBalances[address(this)].div(
+        uint256 amountToSwap = _gonBalances[address(this)] / (
             _gonsPerFragment
         );
         require(
@@ -466,7 +458,7 @@ contract BabiesOfMars is ERC20Upgradeable {
         if (subtractedValue >= oldValue) {
             _allowedFragments[msg.sender][spender] = 0;
         } else {
-            _allowedFragments[msg.sender][spender] = oldValue.sub(
+            _allowedFragments[msg.sender][spender] = oldValue - (
                 subtractedValue
             );
         }
@@ -483,9 +475,7 @@ contract BabiesOfMars is ERC20Upgradeable {
         override
         returns (bool)
     {
-        _allowedFragments[msg.sender][spender] = _allowedFragments[msg.sender][
-            spender
-        ].add(addedValue);
+        _allowedFragments[msg.sender][spender] += addedValue;
         emit Approval(
             msg.sender,
             spender,
@@ -509,10 +499,7 @@ contract BabiesOfMars is ERC20Upgradeable {
     }
 
     function getCirculatingSupply() public view returns (uint256) {
-        return
-            (TOTAL_GONS.sub(_gonBalances[DEAD]).sub(_gonBalances[ZERO])).div(
-                _gonsPerFragment
-            );
+        return (TOTAL_GONS - _gonBalances[DEAD] - _gonBalances[ZERO]) / _gonsPerFragment;
     }
 
     function isNotInSwap() public view returns (bool) {
@@ -538,11 +525,9 @@ contract BabiesOfMars is ERC20Upgradeable {
         view
         returns (uint256)
     {
-        uint256 liquidityBalance = _gonBalances[address(pair)].div(
-            _gonsPerFragment
-        );
+        uint256 liquidityBalance = _gonBalances[address(pair)] / _gonsPerFragment;
         return
-            accuracy.mul(liquidityBalance.mul(2)).div(getCirculatingSupply());
+            accuracy * liquidityBalance * 2 / getCirculatingSupply();
     }
 
     function setWhitelist(address _addr) public onlyAdmin {
@@ -562,7 +547,7 @@ contract BabiesOfMars is ERC20Upgradeable {
     }
 
     function balanceOf(address who) public view override returns (uint256) {
-        return _gonBalances[who].div(_gonsPerFragment);
+        return _gonBalances[who] / _gonsPerFragment;
     }
 
     function isContract(address addr) internal view returns (bool) {

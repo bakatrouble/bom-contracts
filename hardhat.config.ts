@@ -41,12 +41,27 @@ if(PRIVATE_KEY) {
         PRIVATE_KEY
     ]
     networks = {
-        hardhat: {},
+        hardhat: {
+            forking: {
+                url: 'https://data-seed-prebsc-1-s1.binance.org:8545',
+                // blockNumber: 23045694
+            },
+            verify: {
+                etherscan: {
+                    apiKey: BSCSCAN_TOKEN,
+                }
+            },
+        },
         bsc: {
             url: "https://bsc-dataseed.binance.org/",
             chainId: 56,
             gasPrice: 5000000000,
-            accounts
+            accounts,
+            verify: {
+                etherscan: {
+                    apiKey: BSCSCAN_TOKEN,
+                }
+            }
         },
         bscTestnet: {
             url: "https://data-seed-prebsc-1-s1.binance.org:8545",
@@ -96,6 +111,7 @@ module.exports = {
             ropsten:ETHERSCAN_TOKEN,
             kovan:ETHERSCAN_TOKEN,
             bscTestnet:BSCSCAN_TOKEN,
+            hardhat:BSCSCAN_TOKEN,
             goerli:ETHERSCAN_TOKEN
         }
     },
@@ -107,6 +123,7 @@ module.exports = {
                 ropsten:ETHERSCAN_TOKEN,
                 kovan:ETHERSCAN_TOKEN,
                 bscTestnet:BSCSCAN_TOKEN,
+                hardhat:BSCSCAN_TOKEN,
                 goerli:ETHERSCAN_TOKEN
             }
         }

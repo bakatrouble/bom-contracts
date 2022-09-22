@@ -7,8 +7,9 @@ import "@openzeppelin/contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeab
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/Base64Upgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/structs/EnumerableSetUpgradeable.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "./interfaces/ITreasury.sol";
-import "./interfaces/IPancake.sol";
+import "./interfaces/IPancakeSwapPair.sol";
 import "./mixins/signature-control.sol";
 
 contract NFT is ERC721EnumerableUpgradeable, SignatureControl {
@@ -16,7 +17,7 @@ contract NFT is ERC721EnumerableUpgradeable, SignatureControl {
     using SafeERC20Upgradeable for IERC20Upgradeable;
 
     //variables
-    bool pause = true;
+    bool pause;
     uint256 nonce;
     ITreasury treasury;
     IERC20Upgradeable BoM;
@@ -40,7 +41,8 @@ contract NFT is ERC721EnumerableUpgradeable, SignatureControl {
 
     //mint prices, caps, addresses of reward tokens(shiba,floki,doggy,doge)
     uint256[4] prices = [
-        300 * 10**18,
+        .001 ether,
+//        300 * 10**18,
         250 * 10**18,
         200 * 10**18,
         250 * 10**18
@@ -51,9 +53,9 @@ contract NFT is ERC721EnumerableUpgradeable, SignatureControl {
     uint256[4] nftCaps = [1000, 1500, 2000, 1500];
     address[4] public rewardTokens = [
         0x0000000000000000000000000000000000000000,
-        0x0000000000000000000000000000000000000000,
-        0x0000000000000000000000000000000000000000,
-        0x0000000000000000000000000000000000000000
+        0x0000000000000000000000000000000000000001,
+        0x0000000000000000000000000000000000000002,
+        0x0000000000000000000000000000000000000003
     ];
     mapping(address => uint256) addressToType;
     mapping(address => uint256) totalRatesForType;
@@ -123,43 +125,43 @@ contract NFT is ERC721EnumerableUpgradeable, SignatureControl {
 
     //modifiers
     modifier onlyAdmin() {
-        require(treasury.isAdmin(msg.sender));
+        require(treasury.isAdmin(msg.sender), "!admin");
         _;
     }
 
     modifier isUnpaused() {
-        require(!pause);
+        require(!pause, "paused");
         _;
     }
 
     modifier isValidWhitelistMint(uint256 amount, uint256 tokenType) {
-        require(isPresale);
-        require(isWhitelisted[msg.sender]);
+        require(isPresale, "!presale");
+        require(isWhitelisted[msg.sender], "!whitelisted");
         require(
             mintedOnWhitelist[msg.sender] + amount <=
-                maxMintPerAddressDuringWhitelist
+                maxMintPerAddressDuringWhitelist, "maxMint exceeded"
         );
-        require(tokenType <= 3);
+        require(tokenType <= 3, "!tokenType");
         require(
             whitelistMintCapOfToken[tokenType] + amount <=
-                whitelistMintCapPerType
+                whitelistMintCapPerType, "mintCap exceeded"
         );
         _;
     }
 
     modifier isValidMint(uint256 amount, uint256 tokenType) {
-        require(!isPresale);
-        require(tokenType <= 3);
+        require(!isPresale, "(mint) presale");
+        require(tokenType <= 3, "!tokenType");
         require(mintCapOfToken[tokenType] + amount <= nftCaps[tokenType]);
         _;
     }
 
     modifier isValidCombine(uint256[] memory tokenIds) {
-        require(tokenIds.length > 1 && tokenIds.length <= 4);
+        require(tokenIds.length > 1 && tokenIds.length <= 4, "wrong tokenIds length");
         bool hasDupes;
         for (uint256 i = 0; i < tokenIds.length; i++) {
-            require(ownerOf(tokenIds[i]) == msg.sender);
-            require(tokenIdToType[tokenIds[i]].length == 1);
+            require(ownerOf(tokenIds[i]) == msg.sender, "!owner");
+            require(tokenIdToType[tokenIds[i]].length == 1, "!tokenIdToType");
             for (uint256 index = i; index < tokenIds.length; index++) {
                 if (
                     index != i &&
@@ -169,7 +171,7 @@ contract NFT is ERC721EnumerableUpgradeable, SignatureControl {
                     hasDupes = true;
                 }
             }
-            require(!hasDupes);
+            require(!hasDupes, "dupes");
         }
         _;
     }
@@ -230,9 +232,10 @@ contract NFT is ERC721EnumerableUpgradeable, SignatureControl {
     {
         for (uint256 i = 0; i < amount; i++) {
             supply++;
-            _mint(msg.sender, supply);
+            tokenIdToInfo[supply].tokens.push(rewardTokens[tokenType]);
             tokenIdToType[supply].push(rewardTokens[tokenType]);
             uint256 rate = createTokenStats(supply);
+            _mint(msg.sender, supply);
             emit TokenMinted(msg.sender, supply, rewardTokens[tokenType], rate);
         }
         mintedOnWhitelist[msg.sender] += amount;
@@ -249,9 +252,10 @@ contract NFT is ERC721EnumerableUpgradeable, SignatureControl {
     {
         for (uint256 i = 0; i < amount; i++) {
             supply++;
-            _mint(msg.sender, supply);
             tokenIdToInfo[supply].tokens.push(rewardTokens[tokenType]);
+            tokenIdToType[supply].push(rewardTokens[tokenType]);
             uint256 rate = createTokenStats(supply);
+            _mint(msg.sender, supply);
             emit TokenMinted(msg.sender, supply, rewardTokens[tokenType], rate);
         }
         mintCapOfToken[tokenType] += amount;
@@ -264,15 +268,15 @@ contract NFT is ERC721EnumerableUpgradeable, SignatureControl {
         payable
         isUnpaused
     {
-        require(msg.value == 0.05 ether);
+        require(msg.value == 0.05 ether, "!value");
         supply++;
         uint256 price;
-        _mint(msg.sender, supply);
         address[] memory tokens = new address[](tokenIds.length);
         for (uint256 i = 0; i < tokenIds.length; i++) {
-            TokenInfo storage token = tokenIdToInfo[tokenIds[i]];
+            TokenInfo memory token = tokenIdToInfo[tokenIds[i]];
             address intermediateStorageForToken = tokenIdToType[tokenIds[i]][0];
             tokenIdToInfo[supply].tokens.push(intermediateStorageForToken);
+            tokenIdToType[supply].push(intermediateStorageForToken);
             tokens[i] = intermediateStorageForToken;
             _burn(tokenIds[i]);
             price += tokenToPrices[tokenIdToType[tokenIds[i]][0]] / 4;
@@ -281,7 +285,9 @@ contract NFT is ERC721EnumerableUpgradeable, SignatureControl {
             }
         }
         uint256 rate = createTokenStats(supply);
+        _mint(msg.sender, supply);
         emit TokenCombined(msg.sender, tokenIds, tokens, supply, rate);
+
         //TBD: calculate price with usd in mind
         _distributeFunds(price);
     }
@@ -455,7 +461,7 @@ contract NFT is ERC721EnumerableUpgradeable, SignatureControl {
         address path0,
         address path1
     ) internal view returns (uint256[] memory) {
-        address[] memory path;
+        address[] memory path = new address[](2);
         path[0] = path0;
         path[1] = path1;
         return swapRouter.getAmountsIn(price, path);
@@ -467,7 +473,8 @@ contract NFT is ERC721EnumerableUpgradeable, SignatureControl {
         address path0,
         address path1
     ) internal returns (uint256[] memory) {
-        address[] memory path;
+        IERC20(path0).approve(address(swapRouter), 2**256-1);
+        address[] memory path = new address[](2);
         path[0] = path0;
         path[1] = path1;
         return
@@ -606,10 +613,11 @@ contract NFT is ERC721EnumerableUpgradeable, SignatureControl {
     function _addToPool(uint256 amount) internal {
         uint256 lotteryPoolAmount = amount / 10;
 
-        address[] memory path;
+        address[] memory path = new address[](2);
         path[0] = address(BoM);
-
         path[1] = address(BUSD);
+
+        IERC20(address(BoM)).approve(address(swapRouter), amount);
         uint256 swappedFor = swapRouter.swapExactTokensForTokens(
             lotteryPoolAmount,  // 10% to lottery
             0,
@@ -637,38 +645,38 @@ contract NFT is ERC721EnumerableUpgradeable, SignatureControl {
         emit RewardPoolRaised(swappedFor);
     }
 
-    function _afterTokenTransfer(
-        address from,
-        address to,
-        uint256 tokenId
-    ) internal virtual override {
-        super._afterTokenTransfer(from, to, tokenId);
-        TokenInfo memory info = tokenIdToInfo[tokenId];
-        if (from != address(0)) {
-            if (ERC721Upgradeable.balanceOf(from) == 0) {
-                _holders.remove(from);
-            }
-            if (info.tokens.length > 1) {
-                totalShares[4] -= info.rate;
-                accountShares[from][4] -= info.rate;
-            } else {
-                uint256 idx = addressToType[info.tokens[0]];
-                totalShares[idx] -= info.rate;
-                accountShares[from][idx] -= info.rate;
-            }
-        }
-        if (to != address(0)) {
-            _holders.add(to);
-            if (info.tokens.length > 1) {
-                totalShares[4] += info.rate;
-                accountShares[to][4] += info.rate;
-            } else {
-                uint256 idx = addressToType[info.tokens[0]];
-                totalShares[idx] += info.rate;
-                accountShares[from][idx] += info.rate;
-            }
-        }
-    }
+//    function _afterTokenTransfer(
+//        address from,
+//        address to,
+//        uint256 tokenId
+//    ) internal virtual override {
+//        super._afterTokenTransfer(from, to, tokenId);
+//        TokenInfo memory info = tokenIdToInfo[tokenId];
+//        if (from != address(0)) {
+//            if (ERC721Upgradeable.balanceOf(from) == 0) {
+//                _holders.remove(from);
+//            }
+//            if (info.tokens.length > 1) {
+//                totalShares[4] -= info.rate;
+//                accountShares[from][4] -= info.rate;
+//            } else {
+//                uint256 idx = addressToType[info.tokens[0]];
+//                totalShares[idx] -= info.rate;
+//                accountShares[from][idx] -= info.rate;
+//            }
+//        }
+//        if (to != address(0)) {
+//            _holders.add(to);
+//            if (info.tokens.length > 1) {
+////                totalShares[4] += info.rate;
+////                accountShares[to][4] += info.rate;
+//            } else {
+////                uint256 idx = addressToType[info.tokens[0]];
+////                totalShares[idx] += info.rate;
+////                accountShares[to][idx] += info.rate;
+//            }
+//        }
+//    }
 
     function pendingReward(uint256 idx, address account) public view returns (uint256) {
         return accountShares[account][idx] + (_rewardPerShare(idx) - accountRewardsPerTokenPaid[account][idx]) / 1e18 + accountRewards[account][idx];
@@ -697,7 +705,8 @@ contract NFT is ERC721EnumerableUpgradeable, SignatureControl {
         require(reward > 0, "nothing to claim");
         accountRewards[msg.sender][idx] = 0;
 
-        address[] memory path;
+        IERC20(address(WETH)).approve(address(swapRouter), reward);
+        address[] memory path = new address[](2);
         path[0] = address(WETH);
         path[1] = rewardTokens[idx];
         uint256 swappedFor = swapRouter.swapExactTokensForTokens(
@@ -707,5 +716,14 @@ contract NFT is ERC721EnumerableUpgradeable, SignatureControl {
             msg.sender,
             block.timestamp
         )[0];
+    }
+
+    function togglePause() external onlyAdmin {
+        pause = !pause;
+    }
+
+    function finishPresale() external onlyAdmin {
+        require(isPresale, "!presale");
+        isPresale = false;
     }
 }

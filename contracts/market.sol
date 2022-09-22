@@ -18,6 +18,8 @@ contract Marketplace is Initializable {
         address payable seller;
         uint256 tokenId;
         uint256 price;
+        bool bought;
+        bool cancelled;
     }
     mapping(uint256 => Sale) saleIdToSale;
 
@@ -48,22 +50,22 @@ contract Marketplace is Initializable {
 
     //modifiers
     modifier isExistingSale(uint256 saleId) {
-        require(saleIdToSale[saleId].price != 0);
+        require(saleIdToSale[saleId].price != 0, "!exists");
         _;
     }
 
     modifier onlySaleOwner(uint256 saleId) {
-        require(saleIdToSale[saleId].seller == msg.sender);
+        require(saleIdToSale[saleId].seller == msg.sender, "!seller");
         _;
     }
 
     modifier onlyValidPrice(uint256 price) {
-        require(price > 0);
+        require(price > 0, "!price");
         _;
     }
 
     modifier onlyAdmin() {
-        require(treasury.isAdmin(msg.sender));
+        require(treasury.isAdmin(msg.sender), "!admin");
         _;
     }
 
@@ -105,7 +107,7 @@ contract Marketplace is Initializable {
         onlyValidPrice(price)
     {
         currentSaleId++;
-        Sale memory sale = saleIdToSale[currentSaleId];
+        Sale storage sale = saleIdToSale[currentSaleId];
         sale.seller = payable(msg.sender);
         sale.price = price;
         sale.tokenId = tokenId;
@@ -114,9 +116,11 @@ contract Marketplace is Initializable {
     }
 
     function cancelSale(uint256 saleId) public onlySaleOwner(saleId) {
-        Sale memory sale = saleIdToSale[saleId];
+        Sale storage sale = saleIdToSale[saleId];
+        require(!sale.bought, "bought");
+        require(!sale.cancelled, "cancelled");
         nft.transferFrom(address(this), msg.sender, sale.tokenId);
-        delete sale;
+        sale.cancelled = true;
         emit SaleCancelled(saleId);
     }
 
@@ -126,22 +130,27 @@ contract Marketplace is Initializable {
         onlyValidPrice(price)
         isExistingSale(saleId)
     {
-        Sale memory sale = saleIdToSale[saleId];
+        Sale storage sale = saleIdToSale[saleId];
+        require(!sale.bought, "bought");
+        require(!sale.cancelled, "cancelled");
         uint256 oldPrice = sale.price;
         sale.price = price;
         emit SaleUpdated(saleId, oldPrice, price);
     }
 
     function buyToken(uint256 saleId) public isExistingSale(saleId) {
-        Sale memory sale = saleIdToSale[saleId];
+        Sale storage sale = saleIdToSale[saleId];
+        require(!sale.bought, "bought");
+        require(!sale.cancelled, "cancelled");
         nft.transferFrom(address(this), msg.sender, sale.tokenId);
         _distributeFunds(sale.price, sale.seller);
+        sale.bought = true;
         emit TokenBought(saleId, msg.sender, sale.tokenId, sale.price);
     }
 
     //admin functions
     function changeFees(uint256 _fee) public onlyAdmin {
-        require(_fee > 0 && _fee < 2000);
+        require(_fee > 0 && _fee < 2000, "wrong arg");
         emit FeesChanged(msg.sender, fee, _fee);
         fee = _fee;
     }
