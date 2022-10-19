@@ -11,8 +11,10 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "./interfaces/ITreasury.sol";
 import "./interfaces/IPancakeSwapPair.sol";
 import "./mixins/signature-control.sol";
+import "./interfaces/INFT.sol";
+import "./interfaces/INFTMetadata.sol";
 
-contract NFT is ERC721EnumerableUpgradeable, SignatureControl {
+contract NFT is ERC721EnumerableUpgradeable, SignatureControl, INFT {
     using EnumerableSetUpgradeable for EnumerableSetUpgradeable.AddressSet;
     using SafeERC20Upgradeable for IERC20Upgradeable;
 
@@ -42,11 +44,15 @@ contract NFT is ERC721EnumerableUpgradeable, SignatureControl {
     //mint prices, caps, addresses of reward tokens(shiba,floki,doggy,doge)
     uint256[4] prices = [
         .001 ether,
+        .0008 ether,
+        .0006 ether,
+        .0004 ether
 //        300 * 10**18,
-        250 * 10**18,
-        200 * 10**18,
-        250 * 10**18
+//        250 * 10**18,
+//        200 * 10**18,
+//        250 * 10**18
     ];
+    INFTMetadata metadata;
     IERC20Upgradeable BUSD;
     IERC20Upgradeable WETH;
     mapping(address => uint256) tokenToPrices;
@@ -69,7 +75,6 @@ contract NFT is ERC721EnumerableUpgradeable, SignatureControl {
     mapping(address => mapping(uint256 => uint256)) accountRewards;
     mapping(address => mapping(uint256 => uint256)) accountRewardsPerTokenPaid;
 
-    //whitelist shit
     bool public isPresale = true;
     uint256 whitelistPrice = 200 ether;
     uint256 maxMintPerAddressDuringWhitelist = 5;
@@ -82,17 +87,6 @@ contract NFT is ERC721EnumerableUpgradeable, SignatureControl {
 
     uint256 statMultiplier = 100000;
     mapping(uint256 => TokenInfo) tokenIdToInfo;
-    struct TokenInfo {
-        string image;
-        address[] tokens;
-        uint256 rate;
-        uint256 attack;
-        uint256 defense;
-        uint256 health;
-        uint256 critChance;
-        uint256 critDmg;
-        uint256 recover;
-    }
 
     mapping(address => Tokenomic) addressToToken;
     struct Tokenomic {
@@ -150,7 +144,7 @@ contract NFT is ERC721EnumerableUpgradeable, SignatureControl {
     }
 
     modifier isValidMint(uint256 amount, uint256 tokenType) {
-        require(!isPresale, "(mint) presale");
+        require(!isPresale, "presale");
         require(tokenType <= 3, "!tokenType");
         require(mintCapOfToken[tokenType] + amount <= nftCaps[tokenType]);
         _;
@@ -485,67 +479,7 @@ contract NFT is ERC721EnumerableUpgradeable, SignatureControl {
                 address(this),
                 block.timestamp
             );
-        // return
-        //     swapRouter.swapTokensForExactETH(
-        //         price,
-        //         amount,
-        //         path,
-        //         address(this),
-        //         block.timestamp
-        //     );
     }
-
-//    function isValidClaim(
-//        uint256[] memory tokenAmounts,
-//        bytes memory signature,
-//        uint256 userNonce,
-//        uint256 timestamp
-//    ) internal returns (bool) {
-//        bytes memory data = abi.encodePacked(
-//            _toAsciiString(msg.sender),
-//            " is authorized to claim ",
-//            StringsUpgradeable.toString(tokenAmounts[0]),
-//            " shiba, ",
-//            StringsUpgradeable.toString(tokenAmounts[1]),
-//            " floki, ",
-//            StringsUpgradeable.toString(tokenAmounts[2]),
-//            " doggy, ",
-//            StringsUpgradeable.toString(tokenAmounts[3]),
-//            " doge before ",
-//            StringsUpgradeable.toString(timestamp),
-//            ", ",
-//            StringsUpgradeable.toString(userNonce)
-//        );
-//        bytes32 hash = _toEthSignedMessage(data);
-//        address signer = ECDSAUpgradeable.recover(hash, signature);
-//        require(treasury.isOperator(signer), "Mint not verified by operator");
-//        require(block.timestamp <= timestamp, "Outdated signed message");
-//        require(!usedNonces[userNonce], "Used nonce");
-//        return true;
-//    }
-//
-//    function claimRewards(
-//        uint256[] memory amounts,
-//        bytes memory signature,
-//        uint256 userNonce,
-//        uint256 timestamp
-//    ) public {
-//        require(isValidClaim(amounts, signature, userNonce, timestamp), "");
-//        for (uint256 i = 0; i < 4; i++) {
-//            if (amounts[i] > 0) {
-//                address[] memory path;
-//                path[0] = address(WETH);
-//                path[1] = rewardTokens[i];
-//                swapRouter.swapExactTokensForTokens(
-//                    amounts[i],
-//                    1,
-//                    path,
-//                    msg.sender,
-//                    block.timestamp
-//                );
-//            }
-//        }
-//    }
 
     function walletOfOwner(address _owner)
         public
@@ -566,39 +500,9 @@ contract NFT is ERC721EnumerableUpgradeable, SignatureControl {
         override
         returns (string memory)
     {
-        require(_exists(tokenId), "Non-existant token");
-        TokenInfo storage token = tokenIdToInfo[tokenId];
-        return
-            string(
-                abi.encodePacked(
-                    "data:application/json;base64,",
-                    Base64Upgradeable.encode(
-                        bytes(
-                            abi.encodePacked(
-                                '{"name": Babies of Mars #',
-                                tokenId,
-                                ', "description": "adasdasdasd", "image": ',
-                                token.image,
-                                ',{ "attributes": [ {"trait_type": "tokens", "value": ',
-                                token.tokens,
-                                '}, { "trait_type": "attack", "value": ',
-                                token.attack,
-                                '}, { "trait_type": "defense", "value": ',
-                                token.defense,
-                                '}, { "trait_type": "health", "value": ',
-                                token.health,
-                                '}, { "trait_type": "critical rate", "value": ',
-                                token.critChance,
-                                '}, { "trait_type": "critical damage", "value": ',
-                                token.critDmg,
-                                '}, { "trait_type": "recovery", "value": ',
-                                token.recover,
-                                "} ] }"
-                            )
-                        )
-                    )
-                )
-            );
+        require(_exists(tokenId), "Non-existent token");
+        TokenInfo memory token = tokenIdToInfo[tokenId];
+        return metadata.tokenURI(tokenId, token);
     }
 
     function raiseRewardPool(uint256 amount) public {
@@ -645,38 +549,38 @@ contract NFT is ERC721EnumerableUpgradeable, SignatureControl {
         emit RewardPoolRaised(swappedFor);
     }
 
-//    function _afterTokenTransfer(
-//        address from,
-//        address to,
-//        uint256 tokenId
-//    ) internal virtual override {
-//        super._afterTokenTransfer(from, to, tokenId);
-//        TokenInfo memory info = tokenIdToInfo[tokenId];
-//        if (from != address(0)) {
-//            if (ERC721Upgradeable.balanceOf(from) == 0) {
-//                _holders.remove(from);
-//            }
-//            if (info.tokens.length > 1) {
-//                totalShares[4] -= info.rate;
-//                accountShares[from][4] -= info.rate;
-//            } else {
-//                uint256 idx = addressToType[info.tokens[0]];
-//                totalShares[idx] -= info.rate;
-//                accountShares[from][idx] -= info.rate;
-//            }
-//        }
-//        if (to != address(0)) {
-//            _holders.add(to);
-//            if (info.tokens.length > 1) {
-////                totalShares[4] += info.rate;
-////                accountShares[to][4] += info.rate;
-//            } else {
-////                uint256 idx = addressToType[info.tokens[0]];
-////                totalShares[idx] += info.rate;
-////                accountShares[to][idx] += info.rate;
-//            }
-//        }
-//    }
+    function _afterTokenTransfer(
+        address from,
+        address to,
+        uint256 tokenId
+    ) internal virtual override {
+        super._afterTokenTransfer(from, to, tokenId);
+        TokenInfo memory info = tokenIdToInfo[tokenId];
+        if (from != address(0)) {
+            if (balanceOf(from) == 0) {
+                _holders.remove(from);
+            }
+            if (info.tokens.length > 1) {
+                totalShares[4] -= info.rate;
+                accountShares[from][4] -= info.rate;
+            } else {
+                uint256 idx = addressToType[info.tokens[0]];
+                totalShares[idx] -= info.rate;
+                accountShares[from][idx] -= info.rate;
+            }
+        }
+        if (to != address(0)) {
+            _holders.add(to);
+            if (info.tokens.length > 1) {
+                totalShares[4] += info.rate;
+                accountShares[to][4] += info.rate;
+            } else {
+                uint256 idx = addressToType[info.tokens[0]];
+                totalShares[idx] += info.rate;
+                accountShares[to][idx] += info.rate;
+            }
+        }
+    }
 
     function pendingReward(uint256 idx, address account) public view returns (uint256) {
         return accountShares[account][idx] + (_rewardPerShare(idx) - accountRewardsPerTokenPaid[account][idx]) / 1e18 + accountRewards[account][idx];
@@ -725,5 +629,9 @@ contract NFT is ERC721EnumerableUpgradeable, SignatureControl {
     function finishPresale() external onlyAdmin {
         require(isPresale, "!presale");
         isPresale = false;
+    }
+
+    function updateMetadata(INFTMetadata newValue) external onlyAdmin {
+        metadata = newValue;
     }
 }
