@@ -41,17 +41,17 @@ if(PRIVATE_KEY) {
         PRIVATE_KEY
     ]
     networks = {
-        hardhat: {
-            forking: {
-                url: 'https://data-seed-prebsc-1-s1.binance.org:8545',
-                // blockNumber: 23045694
-            },
-            verify: {
-                etherscan: {
-                    apiKey: BSCSCAN_TOKEN,
-                }
-            },
-        },
+        // hardhat: {
+        //     forking: {
+        //         url: 'https://data-seed-prebsc-1-s1.binance.org:8545',
+        //         // blockNumber: 23045694
+        //     },
+        //     verify: {
+        //         etherscan: {
+        //             apiKey: BSCSCAN_TOKEN,
+        //         }
+        //     },
+        // },
         bsc: {
             url: "https://bsc-dataseed.binance.org/",
             chainId: 56,
@@ -74,26 +74,26 @@ if(PRIVATE_KEY) {
                 }
             }
         },
-        rinkeby: {
-            url: "https://eth-rinkeby.alchemyapi.io/v2/v92DVe9FFvr2lzRB4wjtk-z4DdsQjBhs",
-            gasPrice: 5000000000,
-            accounts
-        },
-        ropsten: {
-            url: "https://eth-ropsten.alchemyapi.io/v2/v92DVe9FFvr2lzRB4wjtk-z4DdsQjBhs",
-            gasPrice: 20000000000,
-            accounts
-        },
-        kovan: {
-            url: "https://eth-kovan.alchemyapi.io/v2/v92DVe9FFvr2lzRB4wjtk-z4DdsQjBhs",
-            gasPrice: 20000000000,
-            accounts
-        },
-        goerli: {
-            url: "https://eth-goerli.alchemyapi.io/v2/v92DVe9FFvr2lzRB4wjtk-z4DdsQjBhs",
-            gasPrice: 20000000000,
-            accounts
-        },
+        // rinkeby: {
+        //     url: "https://eth-rinkeby.alchemyapi.io/v2/v92DVe9FFvr2lzRB4wjtk-z4DdsQjBhs",
+        //     gasPrice: 5000000000,
+        //     accounts
+        // },
+        // ropsten: {
+        //     url: "https://eth-ropsten.alchemyapi.io/v2/v92DVe9FFvr2lzRB4wjtk-z4DdsQjBhs",
+        //     gasPrice: 20000000000,
+        //     accounts
+        // },
+        // kovan: {
+        //     url: "https://eth-kovan.alchemyapi.io/v2/v92DVe9FFvr2lzRB4wjtk-z4DdsQjBhs",
+        //     gasPrice: 20000000000,
+        //     accounts
+        // },
+        // goerli: {
+        //     url: "https://eth-goerli.alchemyapi.io/v2/v92DVe9FFvr2lzRB4wjtk-z4DdsQjBhs",
+        //     gasPrice: 20000000000,
+        //     accounts
+        // },
     };
 } else {
     networks = {
@@ -107,24 +107,24 @@ module.exports = {
     etherscan: {
         apiKey: {
             mainnet:ETHERSCAN_TOKEN,
-            rinkeby:ETHERSCAN_TOKEN,
-            ropsten:ETHERSCAN_TOKEN,
-            kovan:ETHERSCAN_TOKEN,
+            // rinkeby:ETHERSCAN_TOKEN,
+            // ropsten:ETHERSCAN_TOKEN,
+            // kovan:ETHERSCAN_TOKEN,
             bscTestnet:BSCSCAN_TOKEN,
-            hardhat:BSCSCAN_TOKEN,
-            goerli:ETHERSCAN_TOKEN
+            // hardhat:BSCSCAN_TOKEN,
+            // goerli:ETHERSCAN_TOKEN
         }
     },
     verify: {
         etherscan: {
             apiKey: {
                 mainnet:ETHERSCAN_TOKEN,
-                rinkeby:ETHERSCAN_TOKEN,
-                ropsten:ETHERSCAN_TOKEN,
-                kovan:ETHERSCAN_TOKEN,
+                // rinkeby:ETHERSCAN_TOKEN,
+                // ropsten:ETHERSCAN_TOKEN,
+                // kovan:ETHERSCAN_TOKEN,
                 bscTestnet:BSCSCAN_TOKEN,
-                hardhat:BSCSCAN_TOKEN,
-                goerli:ETHERSCAN_TOKEN
+                // hardhat:BSCSCAN_TOKEN,
+                // goerli:ETHERSCAN_TOKEN
             }
         }
     },
@@ -137,7 +137,7 @@ module.exports = {
         path: './artifacts/abi',
         clear: true,
         flat: true,
-        only: [':Bithotel'],
+        only: [':BOM'],
         spacing: 2
     },
     solidity: {

@@ -33,8 +33,9 @@ contract NFT is ERC721EnumerableUpgradeable, SignatureControl, INFT {
 
     uint256 supply;
 
-    uint256 wethInRewardPool;
+    uint256 public wethInRewardPool;
     uint256 busdInLotteryPool;
+    uint256 public totalClaimed;
 
     mapping(uint256 => uint256) mintCapOfToken;
     mapping(uint256 => address[]) tokenIdToType;
@@ -608,6 +609,7 @@ contract NFT is ERC721EnumerableUpgradeable, SignatureControl, INFT {
         uint256 reward = accountRewards[msg.sender][idx];
         require(reward > 0, "nothing to claim");
         accountRewards[msg.sender][idx] = 0;
+        totalClaimed==reward;
 
         IERC20(address(WETH)).approve(address(swapRouter), reward);
         address[] memory path = new address[](2);
