@@ -111,6 +111,7 @@ const deployFunc: DeployFunction = async ({ ethers, run, deployments, getChainId
     console.log(`Treasury: ${bomTreasury.address}\nRedFurnace: ${furnaceAddress}\nNFT: ${bomNFT.address}\nMarketplace: ${bomMarket.address}\nBabiesOfMars: ${BoM.address}`);
 
 };
-module.exports.tags = ['Treasury']
-module.exports.dependencies = ['ProxyAdmin']
+module.exports.tags = ['Treasury', 'NFT', 'Marketplace', 'Token']
+module.exports.dependencies = ['ProxyAdmin', 'NFTMetadata', 'Furnace']
+
 export default deployFunc;
