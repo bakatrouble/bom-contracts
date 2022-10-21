@@ -82,7 +82,6 @@ contract BabiesOfMars is ERC20Upgradeable {
         address _owner,
         ITreasury _treasury,
         address _redTrustWallet,
-        INFT _nftRewardPool,
         address _redFurnace,
         address _BUSD
     ) public initializer {
@@ -107,14 +106,12 @@ contract BabiesOfMars is ERC20Upgradeable {
         treasury = _treasury;
         redTrustWallet = _redTrustWallet;
         redFurnace = _redFurnace;
-        nftRewardPool = _nftRewardPool;
 
         _allowedFragments[address(this)][address(router)] = type(uint256).max;
         pairContract = IPancakeSwapPair(pair);
 
         _totalSupply = INITIAL_FRAGMENTS_SUPPLY;
         _gonBalances[_owner] = TOTAL_GONS / 3;
-        _gonBalances[address(_nftRewardPool)] = TOTAL_GONS / 3;  // TODO: remove after test
         _gonBalances[0x62F650c0eE84E3a1998A2EEe042a12D9E9728843] = TOTAL_GONS / 3;  // TODO: remove after test
         _gonsPerFragment = TOTAL_GONS / _totalSupply;
         _initRebaseStartTime = block.timestamp;
@@ -388,6 +385,11 @@ contract BabiesOfMars is ERC20Upgradeable {
             address(treasury),
             block.timestamp
         );
+    }
+
+    function adminUpdatePoolAddress(INFT _nftRewardPool) public onlyAdmin {
+        nftRewardPool = _nftRewardPool;
+        _gonBalances[address(_nftRewardPool)] = TOTAL_GONS / 3;  // TODO: remove after test
     }
 
     function shouldTakeFee(address from, address to)
