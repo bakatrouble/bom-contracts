@@ -11,9 +11,7 @@ import "./interfaces/INFT.sol";
 contract BabiesOfMars is ERC20Upgradeable {
     event LogRebase(uint256 indexed epoch, uint256 totalSupply);
 
-    string public _name = "BabiesOfMars";
-    string public _symbol = "BoM";
-    uint8 public _decimals = 5;
+    uint8 public _decimals;
 
     IPancakeSwapPair public pairContract;
     mapping(address => bool) _isFeeExempt;
@@ -30,12 +28,12 @@ contract BabiesOfMars is ERC20Upgradeable {
 
     uint256 public constant DECIMALS = 5;
     uint256 public constant MAX_UINT256 = ~uint256(0);
-    uint8 public constant RATE_DECIMALS = 7;
+    uint8 public constant RATE_DECIMALS = 5;
 
-    uint256 public feeDenominator = 10000;
+    uint256 public feeDenominator;
 
-    address DEAD = 0x000000000000000000000000000000000000dEaD;
-    address ZERO = 0x0000000000000000000000000000000000000000;
+    address DEAD;
+    address ZERO;
 
     address public autoLiquidityReceiver;
     ITreasury public treasury;
@@ -43,10 +41,10 @@ contract BabiesOfMars is ERC20Upgradeable {
     address public redFurnace;
     address public pairAddress;
     INFT public nftRewardPool;
-    bool public swapEnabled = true;
+    bool public swapEnabled;
     IPancakeSwapRouter public router;
     IPancakeSwapPair public pair;
-    bool inSwap = false;
+    bool inSwap;
 
     uint256 lastPrice;
     uint256 defenderTimer;
@@ -71,7 +69,7 @@ contract BabiesOfMars is ERC20Upgradeable {
     uint256 public _totalSupply;
     uint256 private _gonsPerFragment;
 
-    uint256 public rebaseInterval = 15 minutes;
+    uint256 public rebaseInterval;
 
     mapping(address => uint256) private _gonBalances;
     mapping(address => mapping(address => uint256)) private _allowedFragments;
@@ -85,7 +83,7 @@ contract BabiesOfMars is ERC20Upgradeable {
         address _redFurnace,
         address _BUSD
     ) public initializer {
-        __ERC20_init(_name, _symbol);
+        _initialize();
         router = IPancakeSwapRouter(_router);
         address factoryAddress = router.factory();
         IPancakeSwapFactory factory = IPancakeSwapFactory(factoryAddress);
@@ -127,6 +125,17 @@ contract BabiesOfMars is ERC20Upgradeable {
         defenderTimer = block.timestamp;
 
         emit Transfer(address(0x0), _owner, _totalSupply);
+    }
+
+    function _initialize() internal {
+        __ERC20_init("BabiesOfMars", "BoM");
+        _decimals = 5;
+        feeDenominator = 10000;
+        DEAD = 0x000000000000000000000000000000000000dEaD;
+        ZERO = 0x0000000000000000000000000000000000000000;
+        swapEnabled = true;
+        inSwap = false;
+        rebaseInterval = 15 minutes;
     }
 
     function rebase() internal {

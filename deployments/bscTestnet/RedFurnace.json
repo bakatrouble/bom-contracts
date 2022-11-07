@@ -1,0 +1,40 @@
+{
+  "address": "0x2112915D176F70Ff776d466ad726FA80456C19fC",
+  "abi": [],
+  "transactionHash": "0xe54703ca1cc157088c9c8000007796e30f5d12c2ba56ff845d59acc0aeb9e6fe",
+  "receipt": {
+    "to": null,
+    "from": "0x62F650c0eE84E3a1998A2EEe042a12D9E9728843",
+    "contractAddress": "0x2112915D176F70Ff776d466ad726FA80456C19fC",
+    "transactionIndex": 9,
+    "gasUsed": "67054",
+    "logsBloom": "0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "blockHash": "0x2b9e48f123692d705276949c229c0c662e0f9f1029f7aec69142bd3118f10e10",
+    "transactionHash": "0xe54703ca1cc157088c9c8000007796e30f5d12c2ba56ff845d59acc0aeb9e6fe",
+    "logs": [],
+    "blockNumber": 23890563,
+    "cumulativeGasUsed": "1429273",
+    "status": 1,
+    "byzantium": true
+  },
+  "args": [],
+  "numDeployments": 1,
+  "solcInputHash": "1c8b77181d71d3d77cfb9cc99fb49a5f",
+  "metadata": "{\"compiler\":{\"version\":\"0.8.15+commit.e14f2714\"},\"language\":\"Solidity\",\"output\":{\"abi\":[],\"devdoc\":{\"kind\":\"dev\",\"methods\":{},\"version\":1},\"userdoc\":{\"kind\":\"user\",\"methods\":{},\"version\":1}},\"settings\":{\"compilationTarget\":{\"contracts/furnace.sol\":\"RedFurnace\"},\"evmVersion\":\"london\",\"libraries\":{},\"metadata\":{\"bytecodeHash\":\"ipfs\",\"useLiteralContent\":true},\"optimizer\":{\"enabled\":true,\"runs\":200},\"remappings\":[]},\"sources\":{\"contracts/furnace.sol\":{\"content\":\"// SPDX-License-Identifier: MIT OR Apache-2.0\\r\\n\\r\\n\\r\\npragma solidity ^0.8.14;\\r\\n\\r\\ncontract RedFurnace {}\\r\\n\",\"keccak256\":\"0x20db7a591078b2af331735651420da36cb2f6fcc339927f7059d101b7408cd9e\",\"license\":\"MIT OR Apache-2.0\"}},\"version\":1}",
+  "bytecode": "0x6080604052348015600f57600080fd5b50603f80601d6000396000f3fe6080604052600080fdfea2646970667358221220b830da7eeb26784945f8de5b2257cbcec159ffb1cc1e7de6dfa1bf00f43b533464736f6c634300080f0033",
+  "deployedBytecode": "0x6080604052600080fdfea2646970667358221220b830da7eeb26784945f8de5b2257cbcec159ffb1cc1e7de6dfa1bf00f43b533464736f6c634300080f0033",
+  "devdoc": {
+    "kind": "dev",
+    "methods": {},
+    "version": 1
+  },
+  "userdoc": {
+    "kind": "user",
+    "methods": {},
+    "version": 1
+  },
+  "storageLayout": {
+    "storage": [],
+    "types": null
+  }
+}

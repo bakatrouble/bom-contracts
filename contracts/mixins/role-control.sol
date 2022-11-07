@@ -7,7 +7,7 @@ import "@openzeppelin/contracts-upgradeable/utils/StringsUpgradeable.sol";
 
 abstract contract RoleControl is AccessControlUpgradeable {
 
-    bytes32 OPERATOR_ROLE = bytes32("OPERATOR_ROLE");
+    bytes32 OPERATOR_ROLE;
 
     function isAdmin(address account) public view returns(bool) {
         return hasRole(DEFAULT_ADMIN_ROLE, account);

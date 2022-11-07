@@ -43,27 +43,23 @@ contract NFT is ERC721EnumerableUpgradeable, SignatureControl, INFT {
     mapping(uint256 => bool) usedNonces;
 
     //mint prices, caps, addresses of reward tokens(shiba,floki,doggy,doge)
-    uint256[4] prices = [
-        .001 ether,
-        .0008 ether,
-        .0006 ether,
-        .0004 ether
+    uint256[4] prices;
+    //  = [
+        // .001 ether,
+        // .0008 ether,
+        // .0006 ether,
+        // .0004 ether
 //        300 * 10**18,
 //        250 * 10**18,
 //        200 * 10**18,
 //        250 * 10**18
-    ];
+    // ];
     INFTMetadata metadata;
     IERC20Upgradeable BUSD;
     IERC20Upgradeable WETH;
     mapping(address => uint256) tokenToPrices;
-    uint256[4] nftCaps = [1000, 1500, 2000, 1500];
-    address[4] public rewardTokens = [
-        0x0000000000000000000000000000000000000000,
-        0x0000000000000000000000000000000000000001,
-        0x0000000000000000000000000000000000000002,
-        0x0000000000000000000000000000000000000003
-    ];
+    uint256[4] nftCaps;
+    address[4] public rewardTokens;
     mapping(address => uint256) addressToType;
     mapping(address => uint256) totalRatesForType;
     mapping(address => mapping(address => uint256)) addrerssToRatesForType;
@@ -76,17 +72,17 @@ contract NFT is ERC721EnumerableUpgradeable, SignatureControl, INFT {
     mapping(address => mapping(uint256 => uint256)) accountRewards;
     mapping(address => mapping(uint256 => uint256)) accountRewardsPerTokenPaid;
 
-    bool public isPresale = true;
-    uint256 whitelistPrice = 200 ether;
-    uint256 maxMintPerAddressDuringWhitelist = 5;
-    uint256 whitelistMintCapPerType = 250;
+    bool public isPresale;
+    uint256 whitelistPrice;
+    uint256 constant maxMintPerAddressDuringWhitelist = 5;
+    uint256 constant whitelistMintCapPerType = 250;
     mapping(address => bool) isWhitelisted;
     mapping(address => uint256) mintedOnWhitelist;
     mapping(uint256 => uint256) whitelistMintCapOfToken;
 
     EnumerableSetUpgradeable.AddressSet _holders;  // TODO: migrate?
 
-    uint256 statMultiplier = 100000;
+    uint256 constant statMultiplier = 100000;
     mapping(uint256 => TokenInfo) tokenIdToInfo;
 
     mapping(address => Tokenomic) addressToToken;
@@ -185,9 +181,9 @@ contract NFT is ERC721EnumerableUpgradeable, SignatureControl, INFT {
         IERC20Upgradeable _BUSD,
         IERC20Upgradeable _WETH
     ) public initializer {
+        _initialize(name, symbol);
         treasury = _treasury;
         BoM = token;
-        __ERC721_init(name, symbol);
         redTrustFund = _redTrustFund;
         rewardPoolFee = _rewardFee;
         redTrustFee = _redTrustFee;
@@ -212,6 +208,25 @@ contract NFT is ERC721EnumerableUpgradeable, SignatureControl, INFT {
         swapRouter = _router;
         BUSD = _BUSD;
         WETH = _WETH;
+    }
+
+    function _initialize(string memory name, string memory symbol) internal {
+        __ERC721_init(name, symbol);
+        prices = [
+            .001 ether,
+            .0008 ether,
+            .0006 ether,
+            .0004 ether
+        ];
+        isPresale = true;
+        whitelistPrice = .003 ether;
+        nftCaps = [1000, 1500, 2000, 1500];
+        rewardTokens = [
+        0x0000000000000000000000000000000000000000,
+        0x0000000000000000000000000000000000000001,
+        0x0000000000000000000000000000000000000002,
+        0x0000000000000000000000000000000000000003
+        ];
     }
 
     function addWhitelist(address[] memory whitelist) public onlyAdmin {

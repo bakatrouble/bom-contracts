@@ -41,17 +41,17 @@ if(PRIVATE_KEY) {
         PRIVATE_KEY
     ]
     networks = {
-        // hardhat: {
-        //     forking: {
-        //         url: 'https://data-seed-prebsc-1-s1.binance.org:8545',
-        //         // blockNumber: 23045694
-        //     },
-        //     verify: {
-        //         etherscan: {
-        //             apiKey: BSCSCAN_TOKEN,
-        //         }
-        //     },
-        // },
+        hardhat: {
+            forking: {
+                url: 'https://data-seed-prebsc-1-s1.binance.org:8545',
+                // blockNumber: 23045694
+            },
+            verify: {
+                etherscan: {
+                    apiKey: BSCSCAN_TOKEN,
+                }
+            },
+        },
         bsc: {
             url: "https://bsc-dataseed.binance.org/",
             chainId: 56,

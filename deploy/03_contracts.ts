@@ -30,7 +30,7 @@ const deployFunc: DeployFunction = async ({ ethers, run, deployments, getChainId
     if (deployedTreasury) {
         bomTreasury = await upgrades.upgradeProxy(deployedTreasury.address, factoryTreasury);
     } else {
-        bomTreasury = await upgrades.deployProxy(factoryTreasury);
+        bomTreasury = await upgrades.deployProxy(factoryTreasury,[deployer.address]);
         await bomTreasury.deployed();
     }
     //@ts-ignore

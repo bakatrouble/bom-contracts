@@ -16,11 +16,9 @@ contract Treasury is RoleControl {
         uint256 amount
     );
 
-    constructor() {
-        _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
-    }
-
     function initialize(address admin) public initializer {
+        OPERATOR_ROLE = bytes32("OPERATOR_ROLE");
+        _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
         _setupRole(DEFAULT_ADMIN_ROLE, admin);
     }
 

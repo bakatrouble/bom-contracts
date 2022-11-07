@@ -61,8 +61,8 @@ contract NFTMetadata {
         "ipfs://QmbF534aUPpQAuQL5C7pS53TqppZFHJ22WQRZBdypb2gqd/Mega%20NFT-10.png";
 
     mapping(address => mapping(uint256 => string)) simpleImage;
-    mapping(address => mapping(address => string)) minImage;
-    mapping(address => mapping(address => mapping(address => string))) midImage;
+    mapping(address => mapping(address => string)) public minImage;
+    mapping(address => mapping(address => mapping(address => string))) public midImage;
 
     constructor() {
         _fillImageMappings();
@@ -84,9 +84,8 @@ contract NFTMetadata {
                                 Strings.toString(tokenId),
                                 '", "description": "adasdasdasd", "image": "',
                                 _getImage(token),
-                                '",{ "attributes": [ {"trait_type": "tokens", "value": ',
+                                '", "attributes": [ {"trait_type": "tokens", "value": ',
                                 addressArrayToString(token.tokens),
-                                '}, { "trait_type": "attack", "value": ',
                                 compileStatString(token)
                             )
                         )
@@ -96,7 +95,7 @@ contract NFTMetadata {
     }
 
     function _getImage(INFT.TokenInfo calldata token)
-        internal
+        public
         view
         returns (string memory)
     {
@@ -110,11 +109,11 @@ contract NFTMetadata {
     }
 
     function _getImageIpfs(address[] memory tokens)
-        internal
+        public
         view
         returns (string memory)
     {
-        uint256[] memory indexes = new uint256[](3);
+        uint256[] memory indexes = new uint256[](tokens.length);
         for (uint256 i = 0; i < tokens.length; i++) {
             for (uint256 ind = 0; ind < 4; ind++) {
                 if (tokens[i] == rewardTokens[ind]) {
@@ -123,14 +122,14 @@ contract NFTMetadata {
                 }
             }
         }
-        uint256[] memory sorted = quickSort(indexes, 0, 2);
+        uint256[] memory sorted = quickSort(indexes, 0, tokens.length-1);
         if (sorted.length == 3) {
             return
-                midImage[tokens[sorted[0]]][tokens[sorted[1]]][
-                    tokens[sorted[2]]
+                midImage[rewardTokens[sorted[0]]][rewardTokens[sorted[1]]][
+                    rewardTokens[sorted[2]]
                 ];
         } else {
-            return minImage[tokens[sorted[0]]][tokens[sorted[1]]];
+            return minImage[rewardTokens[sorted[0]]][rewardTokens[sorted[1]]];
         }
     }
 
@@ -138,7 +137,7 @@ contract NFTMetadata {
         uint256[] memory arr,
         uint256 left,
         uint256 right
-    ) internal pure returns (uint256[] memory) {
+    ) public pure returns (uint256[] memory) {
         if (left >= right) return arr;
         uint256 p = arr[(left + right) / 2];
         uint256 i = left;
@@ -191,9 +190,9 @@ contract NFTMetadata {
             if (i == addressArray.length - 1) {
                 result = string.concat(
                     result,
-                    "'0x",
+                    '"0x',
                     toAsciiString(addressArray[i]),
-                    "'"
+                    '"'
                 );
             } else {
                 result = string.concat(
@@ -228,10 +227,10 @@ contract NFTMetadata {
     function _fillImageMappings() internal {
         uint256 rate = 1000;
         for (uint256 i = 0; i < 5; i++) {
-            simpleImage[rewardTokens[0]][rate] = shiba[0];
-            simpleImage[rewardTokens[1]][rate] = floki[0];
-            simpleImage[rewardTokens[2]][rate] = dogy[0];
-            simpleImage[rewardTokens[3]][rate] = doge[0];
+            simpleImage[rewardTokens[0]][rate] = shiba[i];
+            simpleImage[rewardTokens[1]][rate] = floki[i];
+            simpleImage[rewardTokens[2]][rate] = dogy[i];
+            simpleImage[rewardTokens[3]][rate] = doge[i];
             rate += 250;
         }
         minImage[rewardTokens[0]][rewardTokens[1]] = megaMin[0];

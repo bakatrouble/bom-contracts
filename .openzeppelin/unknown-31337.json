@@ -1,0 +1,529 @@
+{
+  "manifestVersion": "3.2",
+  "admin": {
+    "address": "0x54d41cf335bAD4D01D9eD76fdeca6999774E5f4E",
+    "txHash": "0x19d623258413d601c6c69e6f02cd632630a96721468a6a9c1c866ca5ed994a00"
+  },
+  "proxies": [
+    {
+      "address": "0x5FC8d32690cc91D4c39d9d3abcBD16989F875707",
+      "txHash": "0xc708753fa655fff2643b48bcb3fd5850d590d58b05ca2bee75e13bd962b0491d",
+      "kind": "transparent"
+    },
+    {
+      "address": "0x110116DCFF8bECA8F32256D7B7f549Bf08cFF004",
+      "txHash": "0xb91b6be744e26bd005489320b9f24225cb77c0231a206e13b0bba81e83999677",
+      "kind": "transparent"
+    }
+  ],
+  "impls": {
+    "e0323afcb3736a8bb8314cb91abad180a1fb12ccda246276149f27ec639d4d4e": {
+      "address": "0xED258B97abf73AE3c9bE55fa3e9Be01e446a8908",
+      "txHash": "0xefff61bdca8ce3c1bbf9a356c534ae18cfb73845ea02e14d005ed6c0ac0363e8",
+      "layout": {
+        "storage": [
+          {
+            "label": "_initialized",
+            "offset": 0,
+            "slot": "0",
+            "type": "t_uint8",
+            "contract": "Initializable",
+            "src": "@openzeppelin\\contracts-upgradeable\\proxy\\utils\\Initializable.sol:62",
+            "retypedFrom": "bool"
+          },
+          {
+            "label": "_initializing",
+            "offset": 1,
+            "slot": "0",
+            "type": "t_bool",
+            "contract": "Initializable",
+            "src": "@openzeppelin\\contracts-upgradeable\\proxy\\utils\\Initializable.sol:67"
+          },
+          {
+            "label": "__gap",
+            "offset": 0,
+            "slot": "1",
+            "type": "t_array(t_uint256)50_storage",
+            "contract": "ContextUpgradeable",
+            "src": "@openzeppelin\\contracts-upgradeable\\utils\\ContextUpgradeable.sol:36"
+          },
+          {
+            "label": "__gap",
+            "offset": 0,
+            "slot": "51",
+            "type": "t_array(t_uint256)50_storage",
+            "contract": "ERC165Upgradeable",
+            "src": "@openzeppelin\\contracts-upgradeable\\utils\\introspection\\ERC165Upgradeable.sol:41"
+          },
+          {
+            "label": "_roles",
+            "offset": 0,
+            "slot": "101",
+            "type": "t_mapping(t_bytes32,t_struct(RoleData)34_storage)",
+            "contract": "AccessControlUpgradeable",
+            "src": "@openzeppelin\\contracts-upgradeable\\access\\AccessControlUpgradeable.sol:61"
+          },
+          {
+            "label": "__gap",
+            "offset": 0,
+            "slot": "102",
+            "type": "t_array(t_uint256)49_storage",
+            "contract": "AccessControlUpgradeable",
+            "src": "@openzeppelin\\contracts-upgradeable\\access\\AccessControlUpgradeable.sol:247"
+          },
+          {
+            "label": "OPERATOR_ROLE",
+            "offset": 0,
+            "slot": "151",
+            "type": "t_bytes32",
+            "contract": "RoleControl",
+            "src": "contracts\\mixins\\role-control.sol:10"
+          }
+        ],
+        "types": {
+          "t_address": {
+            "label": "address",
+            "numberOfBytes": "20"
+          },
+          "t_array(t_uint256)49_storage": {
+            "label": "uint256[49]",
+            "numberOfBytes": "1568"
+          },
+          "t_array(t_uint256)50_storage": {
+            "label": "uint256[50]",
+            "numberOfBytes": "1600"
+          },
+          "t_bool": {
+            "label": "bool",
+            "numberOfBytes": "1"
+          },
+          "t_bytes32": {
+            "label": "bytes32",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_address,t_bool)": {
+            "label": "mapping(address => bool)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_bytes32,t_struct(RoleData)34_storage)": {
+            "label": "mapping(bytes32 => struct AccessControlUpgradeable.RoleData)",
+            "numberOfBytes": "32"
+          },
+          "t_struct(RoleData)34_storage": {
+            "label": "struct AccessControlUpgradeable.RoleData",
+            "members": [
+              {
+                "label": "members",
+                "type": "t_mapping(t_address,t_bool)",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "adminRole",
+                "type": "t_bytes32",
+                "offset": 0,
+                "slot": "1"
+              }
+            ],
+            "numberOfBytes": "64"
+          },
+          "t_uint256": {
+            "label": "uint256",
+            "numberOfBytes": "32"
+          },
+          "t_uint8": {
+            "label": "uint8",
+            "numberOfBytes": "1"
+          }
+        }
+      }
+    },
+    "fd3cc75063f07cf4d5eadb6f4d1f36d8b2dc1ba23e583dca41acf1a9f20105c3": {
+      "address": "0xf2AFa733D0bb13A906315Cd06BB5421247D49676",
+      "txHash": "0x5ef7000ba73acee6d84dcd2216e615a4d098cf28fcd77d342d52dfd161a79098",
+      "layout": {
+        "storage": [
+          {
+            "label": "_initialized",
+            "offset": 0,
+            "slot": "0",
+            "type": "t_uint8",
+            "contract": "Initializable",
+            "src": "@openzeppelin\\contracts-upgradeable\\proxy\\utils\\Initializable.sol:62",
+            "retypedFrom": "bool"
+          },
+          {
+            "label": "_initializing",
+            "offset": 1,
+            "slot": "0",
+            "type": "t_bool",
+            "contract": "Initializable",
+            "src": "@openzeppelin\\contracts-upgradeable\\proxy\\utils\\Initializable.sol:67"
+          },
+          {
+            "label": "__gap",
+            "offset": 0,
+            "slot": "1",
+            "type": "t_array(t_uint256)50_storage",
+            "contract": "ContextUpgradeable",
+            "src": "@openzeppelin\\contracts-upgradeable\\utils\\ContextUpgradeable.sol:36"
+          },
+          {
+            "label": "_balances",
+            "offset": 0,
+            "slot": "51",
+            "type": "t_mapping(t_address,t_uint256)",
+            "contract": "ERC20Upgradeable",
+            "src": "@openzeppelin\\contracts-upgradeable\\token\\ERC20\\ERC20Upgradeable.sol:37"
+          },
+          {
+            "label": "_allowances",
+            "offset": 0,
+            "slot": "52",
+            "type": "t_mapping(t_address,t_mapping(t_address,t_uint256))",
+            "contract": "ERC20Upgradeable",
+            "src": "@openzeppelin\\contracts-upgradeable\\token\\ERC20\\ERC20Upgradeable.sol:39"
+          },
+          {
+            "label": "_totalSupply",
+            "offset": 0,
+            "slot": "53",
+            "type": "t_uint256",
+            "contract": "ERC20Upgradeable",
+            "src": "@openzeppelin\\contracts-upgradeable\\token\\ERC20\\ERC20Upgradeable.sol:41"
+          },
+          {
+            "label": "_name",
+            "offset": 0,
+            "slot": "54",
+            "type": "t_string_storage",
+            "contract": "ERC20Upgradeable",
+            "src": "@openzeppelin\\contracts-upgradeable\\token\\ERC20\\ERC20Upgradeable.sol:43"
+          },
+          {
+            "label": "_symbol",
+            "offset": 0,
+            "slot": "55",
+            "type": "t_string_storage",
+            "contract": "ERC20Upgradeable",
+            "src": "@openzeppelin\\contracts-upgradeable\\token\\ERC20\\ERC20Upgradeable.sol:44"
+          },
+          {
+            "label": "__gap",
+            "offset": 0,
+            "slot": "56",
+            "type": "t_array(t_uint256)45_storage",
+            "contract": "ERC20Upgradeable",
+            "src": "@openzeppelin\\contracts-upgradeable\\token\\ERC20\\ERC20Upgradeable.sol:394"
+          },
+          {
+            "label": "_decimals",
+            "offset": 0,
+            "slot": "101",
+            "type": "t_uint8",
+            "contract": "BabiesOfMars",
+            "src": "contracts\\token.sol:14"
+          },
+          {
+            "label": "pairContract",
+            "offset": 1,
+            "slot": "101",
+            "type": "t_contract(IPancakeSwapPair)1722",
+            "contract": "BabiesOfMars",
+            "src": "contracts\\token.sol:16"
+          },
+          {
+            "label": "_isFeeExempt",
+            "offset": 0,
+            "slot": "102",
+            "type": "t_mapping(t_address,t_bool)",
+            "contract": "BabiesOfMars",
+            "src": "contracts\\token.sol:17"
+          },
+          {
+            "label": "feeDenominator",
+            "offset": 0,
+            "slot": "103",
+            "type": "t_uint256",
+            "contract": "BabiesOfMars",
+            "src": "contracts\\token.sol:33"
+          },
+          {
+            "label": "DEAD",
+            "offset": 0,
+            "slot": "104",
+            "type": "t_address",
+            "contract": "BabiesOfMars",
+            "src": "contracts\\token.sol:35"
+          },
+          {
+            "label": "ZERO",
+            "offset": 0,
+            "slot": "105",
+            "type": "t_address",
+            "contract": "BabiesOfMars",
+            "src": "contracts\\token.sol:36"
+          },
+          {
+            "label": "autoLiquidityReceiver",
+            "offset": 0,
+            "slot": "106",
+            "type": "t_address",
+            "contract": "BabiesOfMars",
+            "src": "contracts\\token.sol:38"
+          },
+          {
+            "label": "treasury",
+            "offset": 0,
+            "slot": "107",
+            "type": "t_contract(ITreasury)2188",
+            "contract": "BabiesOfMars",
+            "src": "contracts\\token.sol:39"
+          },
+          {
+            "label": "redTrustWallet",
+            "offset": 0,
+            "slot": "108",
+            "type": "t_address",
+            "contract": "BabiesOfMars",
+            "src": "contracts\\token.sol:40"
+          },
+          {
+            "label": "redFurnace",
+            "offset": 0,
+            "slot": "109",
+            "type": "t_address",
+            "contract": "BabiesOfMars",
+            "src": "contracts\\token.sol:41"
+          },
+          {
+            "label": "pairAddress",
+            "offset": 0,
+            "slot": "110",
+            "type": "t_address",
+            "contract": "BabiesOfMars",
+            "src": "contracts\\token.sol:42"
+          },
+          {
+            "label": "nftRewardPool",
+            "offset": 0,
+            "slot": "111",
+            "type": "t_contract(INFT)1480",
+            "contract": "BabiesOfMars",
+            "src": "contracts\\token.sol:43"
+          },
+          {
+            "label": "swapEnabled",
+            "offset": 20,
+            "slot": "111",
+            "type": "t_bool",
+            "contract": "BabiesOfMars",
+            "src": "contracts\\token.sol:44"
+          },
+          {
+            "label": "router",
+            "offset": 0,
+            "slot": "112",
+            "type": "t_contract(IPancakeSwapRouter)2110",
+            "contract": "BabiesOfMars",
+            "src": "contracts\\token.sol:45"
+          },
+          {
+            "label": "pair",
+            "offset": 0,
+            "slot": "113",
+            "type": "t_contract(IPancakeSwapPair)1722",
+            "contract": "BabiesOfMars",
+            "src": "contracts\\token.sol:46"
+          },
+          {
+            "label": "inSwap",
+            "offset": 20,
+            "slot": "113",
+            "type": "t_bool",
+            "contract": "BabiesOfMars",
+            "src": "contracts\\token.sol:47"
+          },
+          {
+            "label": "lastPrice",
+            "offset": 0,
+            "slot": "114",
+            "type": "t_uint256",
+            "contract": "BabiesOfMars",
+            "src": "contracts\\token.sol:49"
+          },
+          {
+            "label": "defenderTimer",
+            "offset": 0,
+            "slot": "115",
+            "type": "t_uint256",
+            "contract": "BabiesOfMars",
+            "src": "contracts\\token.sol:50"
+          },
+          {
+            "label": "accumulatedImpact",
+            "offset": 0,
+            "slot": "116",
+            "type": "t_uint256",
+            "contract": "BabiesOfMars",
+            "src": "contracts\\token.sol:51"
+          },
+          {
+            "label": "rdStatus",
+            "offset": 0,
+            "slot": "117",
+            "type": "t_bool",
+            "contract": "BabiesOfMars",
+            "src": "contracts\\token.sol:52"
+          },
+          {
+            "label": "_autoRebase",
+            "offset": 1,
+            "slot": "117",
+            "type": "t_bool",
+            "contract": "BabiesOfMars",
+            "src": "contracts\\token.sol:64"
+          },
+          {
+            "label": "_autoAddLiquidity",
+            "offset": 2,
+            "slot": "117",
+            "type": "t_bool",
+            "contract": "BabiesOfMars",
+            "src": "contracts\\token.sol:65"
+          },
+          {
+            "label": "_initRebaseStartTime",
+            "offset": 0,
+            "slot": "118",
+            "type": "t_uint256",
+            "contract": "BabiesOfMars",
+            "src": "contracts\\token.sol:66"
+          },
+          {
+            "label": "_lastRebasedTime",
+            "offset": 0,
+            "slot": "119",
+            "type": "t_uint256",
+            "contract": "BabiesOfMars",
+            "src": "contracts\\token.sol:67"
+          },
+          {
+            "label": "_lastAddLiquidityTime",
+            "offset": 0,
+            "slot": "120",
+            "type": "t_uint256",
+            "contract": "BabiesOfMars",
+            "src": "contracts\\token.sol:68"
+          },
+          {
+            "label": "_totalSupply",
+            "offset": 0,
+            "slot": "121",
+            "type": "t_uint256",
+            "contract": "BabiesOfMars",
+            "src": "contracts\\token.sol:69"
+          },
+          {
+            "label": "_gonsPerFragment",
+            "offset": 0,
+            "slot": "122",
+            "type": "t_uint256",
+            "contract": "BabiesOfMars",
+            "src": "contracts\\token.sol:70"
+          },
+          {
+            "label": "rebaseInterval",
+            "offset": 0,
+            "slot": "123",
+            "type": "t_uint256",
+            "contract": "BabiesOfMars",
+            "src": "contracts\\token.sol:72"
+          },
+          {
+            "label": "_gonBalances",
+            "offset": 0,
+            "slot": "124",
+            "type": "t_mapping(t_address,t_uint256)",
+            "contract": "BabiesOfMars",
+            "src": "contracts\\token.sol:74"
+          },
+          {
+            "label": "_allowedFragments",
+            "offset": 0,
+            "slot": "125",
+            "type": "t_mapping(t_address,t_mapping(t_address,t_uint256))",
+            "contract": "BabiesOfMars",
+            "src": "contracts\\token.sol:75"
+          },
+          {
+            "label": "blacklist",
+            "offset": 0,
+            "slot": "126",
+            "type": "t_mapping(t_address,t_bool)",
+            "contract": "BabiesOfMars",
+            "src": "contracts\\token.sol:76"
+          }
+        ],
+        "types": {
+          "t_address": {
+            "label": "address",
+            "numberOfBytes": "20"
+          },
+          "t_array(t_uint256)45_storage": {
+            "label": "uint256[45]",
+            "numberOfBytes": "1440"
+          },
+          "t_array(t_uint256)50_storage": {
+            "label": "uint256[50]",
+            "numberOfBytes": "1600"
+          },
+          "t_bool": {
+            "label": "bool",
+            "numberOfBytes": "1"
+          },
+          "t_contract(INFT)1480": {
+            "label": "contract INFT",
+            "numberOfBytes": "20"
+          },
+          "t_contract(IPancakeSwapPair)1722": {
+            "label": "contract IPancakeSwapPair",
+            "numberOfBytes": "20"
+          },
+          "t_contract(IPancakeSwapRouter)2110": {
+            "label": "contract IPancakeSwapRouter",
+            "numberOfBytes": "20"
+          },
+          "t_contract(ITreasury)2188": {
+            "label": "contract ITreasury",
+            "numberOfBytes": "20"
+          },
+          "t_mapping(t_address,t_bool)": {
+            "label": "mapping(address => bool)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_address,t_mapping(t_address,t_uint256))": {
+            "label": "mapping(address => mapping(address => uint256))",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_address,t_uint256)": {
+            "label": "mapping(address => uint256)",
+            "numberOfBytes": "32"
+          },
+          "t_string_storage": {
+            "label": "string",
+            "numberOfBytes": "32"
+          },
+          "t_uint256": {
+            "label": "uint256",
+            "numberOfBytes": "32"
+          },
+          "t_uint8": {
+            "label": "uint8",
+            "numberOfBytes": "1"
+          }
+        }
+      }
+    }
+  }
+}
